@@ -53,11 +53,11 @@ class OrderController extends Controller
             'customer_name' => 'required|string|max:255',
             'customer_phone' => 'required|string|max:20',
             'items' => 'required|array',
-            'items.*.service_detail_id' => 'required|exists:service_details,id',
+            'items.*.service_id' => 'required|exists:service_details,id', // Ubah dari service_detail_id ke service_id
             'items.*.quantity' => 'required|integer|min:1',
-            'items.*.shoe_images' => 'nullable|array',
-            'items.*.shoe_images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
-            'delivery_method' => 'required|in:pickup,dropoff',
+            'items.*.images' => 'nullable|array', // Ubah dari shoe_images ke images agar sesuai dengan form
+            'items.*.images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
+            'delivery_option' => 'required|in:pickup,dropoff', // Ubah dari delivery_method ke delivery_option
             'pickup_address' => 'nullable|string',
             'notes' => 'nullable|string',
         ]);
@@ -67,9 +67,9 @@ class OrderController extends Controller
         $order = Order::create([
             'order_number' => $orderNumber,
             'user_id' => Auth::id(),
-            'customer_name' => $request->customer_name, // Tambahkan ini
-            'customer_phone' => $request->customer_phone, // Tambahkan ini
-            'delivery_method' => $request->delivery_method,
+            'customer_name' => $request->customer_name,
+            'customer_phone' => $request->customer_phone,
+            'delivery_method' => $request->delivery_option, // Ubah sesuai form
             'pickup_address' => $request->pickup_address,
             'notes' => $request->notes,
             'status' => 'pending',
@@ -77,18 +77,18 @@ class OrderController extends Controller
 
         foreach ($request->items as $item) {
             $images = [];
-            if (!empty($item['shoe_images'])) {
-                foreach ($item['shoe_images'] as $image) {
+            if (!empty($item['images'])) { // Ubah shoe_images ke images
+                foreach ($item['images'] as $image) {
                     $path = $image->store('shoe_images', 'public');
                     $images[] = $path;
                 }
             }
-
+        
             OrderItem::create([
                 'order_id' => $order->id,
-                'service_detail_id' => $item['service_detail_id'],
+                'service_detail_id' => $item['service_id'], // Ubah service_detail_id ke service_id
                 'quantity' => $item['quantity'],
-                'shoe_images' => $images,
+                'shoe_images' => json_encode($images), // Simpan dalam format JSON
             ]);
         }
 

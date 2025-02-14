@@ -46,12 +46,20 @@ class AuthController extends Controller
             'username' => 'required|string',
             'password' => 'required|string',
         ]);
-
+    
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            return redirect()->intended('/');
+    
+            $user = Auth::user();
+    
+            // Cek role user
+            if ($user->role === 'customer') {
+                return redirect()->intended('/');
+            } else {
+                return redirect()->intended('/admin-dashboard'); // Ganti dengan halaman admin jika perlu
+            }
         }
-
+    
         return back()->withErrors([
             'username' => 'The provided credentials do not match our records.',
         ]);

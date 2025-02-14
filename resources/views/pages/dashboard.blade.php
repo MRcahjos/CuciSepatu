@@ -1,0 +1,8 @@
+@extends('layouts.app')
+
+@section('content')
+<div class="container-xl">
+  dahsboard content
+  Lorem ipsum dolor sit amet consectetur adipisicing elit. Voluptas dolore quo officia deserunt sint. Vel repellat tempore nostrum corporis, quo fuga id voluptatem sequi dicta doloremque possimus odio rerum, hic explicabo dignissimos deleniti rem vero laborum. Quidem, quis. Quam minus veniam expedita officia numquam iste a sint quod ex voluptatem dolore rerum veritatis architecto earum illum, laboriosam similique nesciunt, ab laborum ullam consectetur! Eos deleniti quae voluptatum illo, cum qui beatae laboriosam ratione velit nesciunt, eligendi cumque. Officiis est ullam, illo numquam dolor enim, dignissimos quo cumque a corrupti expedita? Debitis tempora ipsam velit reprehenderit veniam aliquid rem nisi architecto nam repellat cum corporis molestiae neque sit nemo cupiditate dolorum, magni eos, repellendus quos? Sit perspiciatis impedit ab vel repellendus nihil praesentium distinctio consequuntur eveniet voluptatibus ad doloribus laboriosam, ea quos officia in assumenda similique saepe accusantium esse iste, optio cupiditate aut a. Exercitationem maxime cum corporis iste natus harum provident vero alias tenetur, officia fuga distinctio perferendis suscipit obcaecati saepe mollitia optio sed iure porro sit. Illum, iure totam quo, a molestiae ullam iusto esse, doloremque facilis ut nisi itaque autem dolor aut rerum dolores. Voluptates blanditiis, iusto eius saepe quas impedit soluta autem similique temporibus. Animi, itaque?
+</div>
+@endsection

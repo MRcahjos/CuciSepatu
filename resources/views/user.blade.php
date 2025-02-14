@@ -375,8 +375,17 @@
                 text-align: center;
             }
 
+            .card-service {
+        margin-bottom: 1rem;
+    }
+
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+
             .order-form {
                 padding: 20px;
+                padding: 1.5rem;
             }
         }
     </style>
@@ -584,83 +593,171 @@
                             <h6 class="text-primary fw-bold mb-2">PEMESANAN</h6>
                             <h2 class="fw-bold mb-4">Form Pemesanan</h2>
                         </div>
-                        <form action="{{ route('orders.store') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('orders.store') }}" method="POST" enctype="multipart/form-data" id="orderForm">
                             @csrf
-                            <div class="row mb-4">
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Nama Lengkap</label>
-                                    <input type="text" class="form-control" name="customer_name" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label class="form-label">Nomor WhatsApp</label>
-                                    <input type="tel" class="form-control" name="customer_phone" required>
-                                </div>
-                            </div>
-                            
-                            <div id="service-container">
-                                <div class="service-group mb-4">
+                            <!-- Customer Information -->
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-3">
+                                        <i class="fas fa-user-circle text-primary me-2"></i>
+                                        Informasi Pemesan
+                                    </h5>
                                     <div class="row">
                                         <div class="col-md-6 mb-3">
-                                            <label class="form-label">Pilih Layanan</label>
-                                            <select class="form-select" name="items[0][service_detail_id]" required>
-                                                <option value="">Pilih layanan...</option>
-                                                @foreach($services as $service)
-                                                    <optgroup label="{{ $service->name }}">
-                                                        @foreach($service->details as $detail)
-                                                            <option value="{{ $detail->id }}">{{ $detail->item }} - Rp {{ number_format($detail->price) }}</option>
-                                                        @endforeach
-                                                    </optgroup>
-                                                @endforeach
-                                            </select>
+                                            <label class="form-label">Nama Lengkap <span class="text-danger">*</span></label>
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   name="customer_name" 
+                                                   placeholder="Masukkan nama lengkap"
+                                                   value="{{ Auth::user()->name }}" 
+                                                   required>
+                                            <div class="form-text">Nama sesuai dengan pesanan</div>
                                         </div>
-                                        <div class="col-md-4 mb-3">
-                                            <label class="form-label">Jumlah Sepatu</label>
-                                            <input type="number" class="form-control" name="items[0][quantity]" min="1" value="1" required>
-                                        </div>
-                                        <div class="col-md-2 d-flex align-items-end">
-                                            <button type="button" class="btn btn-danger remove-service d-none">Hapus</button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <button type="button" class="btn btn-secondary mb-4" id="add-service">Tambah Layanan</button>
-                            
-                            <div class="mb-4">
-                                <label class="form-label">Metode Pengiriman</label>
-                                <div class="row g-3">
-                                    <div class="col-md-6">
-                                        <div class="form-check card p-3">
-                                            <input class="form-check-input" type="radio" name="delivery_method" value="pickup" id="pickup" checked>
-                                            <label class="form-check-label" for="pickup">
-                                                <h6 class="mb-1">Pickup</h6>
-                                                <small class="text-muted">Kami jemput ke lokasi Anda</small>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="form-check card p-3">
-                                            <input class="form-check-input" type="radio" name="delivery_method" value="dropoff" id="dropoff">
-                                            <label class="form-check-label" for="dropoff">
-                                                <h6 class="mb-1">Drop Off</h6>
-                                                <small class="text-muted">Antar ke toko kami</small>
-                                            </label>
+                                        <div class="col-md-6 mb-3">
+                                            <label class="form-label">Nomor WhatsApp <span class="text-danger">*</span></label>
+                                            <input type="tel" 
+                                                   class="form-control" 
+                                                   name="customer_phone"
+                                                   placeholder="Contoh: 08123456789"
+                                                   pattern="[0-9]{10,13}"
+                                                   required>
+                                            <div class="form-text">Pastikan nomor WhatsApp aktif</div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            
-                            <div class="mb-4 pickup-address">
-                                <label class="form-label">Alamat Penjemputan</label>
-                                <textarea class="form-control" name="pickup_address" rows="3" required></textarea>
-                                <div class="form-text">Gratis pengiriman untuk radius 5km</div>
+    
+                            <!-- Service Items -->
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-center mb-3">
+                                        <h5 class="card-title mb-0">
+                                            <i class="fas fa-shopping-cart text-primary me-2"></i>
+                                            Item Pesanan
+                                        </h5>
+                                        <button type="button" class="btn btn-primary btn-sm" id="add-service">
+                                            <i class="fas fa-plus me-2"></i>Tambah Item
+                                        </button>
+                                    </div>
+                                    
+                                    <div id="service-container">
+                                        <div class="service-group mb-4">
+                                            <div class="row">
+                                                <div class="col-md-6 mb-3">
+                                                    <label class="form-label">Pilih Layanan <span class="text-danger">*</span></label>
+                                                    <select class="form-select" name="items[0][service_id]" required>
+                                                        <option value="">Pilih layanan...</option>
+                                                        @foreach($services as $service)
+                                                        <optgroup label="{{ $service->name }}">
+                                                            @foreach($service->details as $detail)
+                                                                <option value="{{ $detail->id }}" 
+                                                                        data-price="{{ $detail->price }}">
+                                                                    {{ $detail->item }} - Rp {{ number_format($detail->price, 0, ',', '.') }}
+                                                                </option>
+                                                            @endforeach
+                                                        </optgroup>
+                                                    @endforeach
+                                                    </select>
+                                                </div>
+                                                <div class="col-md-4 mb-3">
+                                                    <label class="form-label">Jumlah <span class="text-danger">*</span></label>
+                                                    <input type="number" 
+                                                           class="form-control" 
+                                                           name="items[0][quantity]" 
+                                                           min="1" 
+                                                           max="10"
+                                                           value="1" 
+                                                           required>
+                                                    <div class="form-text">Maksimal 10 pasang per layanan</div>
+                                                </div>
+                                                <div class="col-md-2 d-flex align-items-end">
+                                                    <button type="button" class="btn btn-outline-danger remove-service d-none">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <div class="mb-3">
+                                                <label class="form-label">Foto Sepatu</label>
+                                                <input type="file" 
+                                                       class="form-control" 
+                                                       name="items[0][images][]" 
+                                                       accept="image/*" 
+                                                       multiple>
+                                                <div class="form-text">Upload maksimal 3 foto (tampak depan, samping, sol)</div>
+                                            </div>
+                                        </div>
+                                    </div>
+    
+                                    <!-- Order Summary -->
+                                    <div class="alert alert-primary mt-3">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <span>Total Pembayaran:</span>
+                                            <span class="h5 mb-0" id="totalPrice">Rp 0</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            
-                            <div class="mb-4">
-                                <label class="form-label">Catatan Tambahan</label>
-                                <textarea class="form-control" name="notes" rows="3"></textarea>
+    
+                            <!-- Delivery Method -->
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-3">
+                                        <i class="fas fa-truck text-primary me-2"></i>
+                                        Metode Pengiriman
+                                    </h5>
+                                    <div class="row g-3">
+                                        <div class="col-md-6">
+                                            <div class="form-check card p-3">
+                                                <input class="form-check-input" type="radio" name="delivery_option" 
+                                                       value="pickup" id="pickup" checked>
+                                                <label class="form-check-label" for="pickup">
+                                                    <h6 class="mb-1">Pickup</h6>
+                                                    <small class="text-muted">Kami jemput ke lokasi Anda</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-check card p-3">
+                                                <input class="form-check-input" type="radio" name="delivery_option" 
+                                                       value="dropoff" id="dropoff">
+                                                <label class="form-check-label" for="dropoff">
+                                                    <h6 class="mb-1">Drop Off</h6>
+                                                    <small class="text-muted">Antar ke toko kami</small>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+    
+                                    <div class="mt-3 pickup-address">
+                                        <label class="form-label">Alamat Lengkap <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" 
+                                                  name="pickup_address" 
+                                                  rows="3" 
+                                                  placeholder="Contoh: Jl. Nama Jalan No.123, RT/RW, Kelurahan, Kecamatan, Kota"
+                                                  required></textarea>
+                                        <div class="form-text">
+                                            <i class="fas fa-info-circle me-1"></i>
+                                            Gratis pengiriman untuk radius 5km
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
-                            
+    
+                            <!-- Additional Notes -->
+                            <div class="card shadow-sm mb-4">
+                                <div class="card-body">
+                                    <h5 class="card-title mb-3">
+                                        <i class="fas fa-sticky-note text-primary me-2"></i>
+                                        Catatan Tambahan
+                                    </h5>
+                                    <textarea class="form-control" 
+                                              name="notes" 
+                                              rows="3"
+                                              placeholder="Contoh: Sepatu putih nike, ada noda di bagian depan, tolong bersihkan bagian sol juga"></textarea>
+                                    <div class="form-text">Tambahkan detail spesifik tentang sepatu atau request khusus</div>
+                                </div>
+                            </div>
+    
                             <button type="submit" class="btn btn-primary btn-lg w-100">
                                 <i class="fas fa-shopping-cart me-2"></i>Pesan Sekarang
                             </button>
