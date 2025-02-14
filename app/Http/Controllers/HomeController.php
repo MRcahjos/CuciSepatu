@@ -39,7 +39,13 @@ class HomeController extends Controller
             $orders = $query->orderBy('created_at', 'desc')->paginate(10);
         }
 
-        return view('user', compact('services', 'orders'));
+        $testimonials = Order::whereNotNull('rating')
+            ->whereNotNull('review')
+            ->orderBy('rated_at', 'desc')
+            ->take(6) // Ambil maksimal 6 testimoni terbaru
+            ->get();
+
+        return view('user', compact('services', 'orders', 'testimonials'));
     }
 
     public function getOrderDetails($id)

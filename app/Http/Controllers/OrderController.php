@@ -53,7 +53,7 @@ class OrderController extends Controller
             'customer_name' => 'required|string|max:255',
             'customer_phone' => 'required|string|max:20',
             'items' => 'required|array',
-            'items.*.service_id' => 'required|exists:service_details,id', // Ubah dari service_detail_id ke service_id
+            'items.*.service_detail_id' => 'required|exists:service_details,id', // Ubah dari service_detail_id ke service_id
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.images' => 'nullable|array', // Ubah dari shoe_images ke images agar sesuai dengan form
             'items.*.images.*' => 'image|mimes:jpeg,png,jpg|max:2048',
@@ -86,7 +86,7 @@ class OrderController extends Controller
         
             OrderItem::create([
                 'order_id' => $order->id,
-                'service_detail_id' => $item['service_id'], // Ubah service_detail_id ke service_id
+               'service_detail_id' => $item['service_detail_id'],  // Ubah service_detail_id ke service_id
                 'quantity' => $item['quantity'],
                 'shoe_images' => json_encode($images), // Simpan dalam format JSON
             ]);
@@ -106,12 +106,34 @@ class OrderController extends Controller
     }
 
     public function detail(Order $order)
-{
-    $order->load('items.serviceDetail');
-    $order->total = $order->items->sum(function($item) {
-        return $item->serviceDetail->price * $item->quantity;
-    });
-    
-    return response()->json($order);
-}
+    {
+        $order->load('items.serviceDetail');
+        $order->total = $order->items->sum(function($item) {
+            return $item->serviceDetail->price * $item->quantity;
+        });
+        
+        return response()->json($order);
+    }
+
+    public function rate(Request $request)
+    {
+        $request->validate([
+            'order_id' => 'required|exists:orders,id',
+            'rating' => 'required|integer|min:1|max:5',
+            'review' => 'nullable|string|max:500',
+        ]);
+
+        $order = Order::findOrFail($request->order_id);
+
+        if ($order->status !== 'completed' || $order->hasRated()) {
+            return response()->json(['success' => false, 'message' => 'Pesanan belum selesai atau sudah diberi rating'], 400);
+        }
+
+        $order->rating = $request->rating;
+        $order->review = $request->review;
+        $order->rated_at = now();
+        $order->save();
+
+        return response()->json(['success' => true]);
+    }
 }

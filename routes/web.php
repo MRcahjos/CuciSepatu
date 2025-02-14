@@ -22,6 +22,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
     Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::post('/orders/rate', [OrderController::class, 'rate'])->name('orders.rate');
     Route::get('/orders/{order}/detail', [OrderController::class, 'detail'])->name('orders.detail');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');

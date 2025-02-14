@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Laundry Sepatu - Bersihkan Sepatumu dengan Mudah</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -645,7 +646,7 @@
                                             <div class="row">
                                                 <div class="col-md-6 mb-3">
                                                     <label class="form-label">Pilih Layanan <span class="text-danger">*</span></label>
-                                                    <select class="form-select" name="items[0][service_id]" required>
+                                                    <select class="form-select" name="items[0][service_detail_id]" required>
                                                         <option value="">Pilih layanan...</option>
                                                         @foreach($services as $service)
                                                         <optgroup label="{{ $service->name }}">
@@ -851,11 +852,12 @@
                                         data-bs-target="#detailModal">
                                     <i class="fas fa-eye me-1"></i>Detail
                                 </button>
-                                        @if ($order->status == 'completed')
-                                        <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#ratingModal">
-                                            <i class="fas fa-star me-1"></i>Rate
-                                        </button>
-                                        @endif
+                                @if ($order->status == 'completed' && !$order->hasRated())
+                                <button class="btn btn-sm btn-warning rate-btn" data-bs-toggle="modal" data-bs-target="#ratingModal" data-order-id="{{ $order->id }}">
+                                    <i class="fas fa-star me-1"></i>Rate
+                                </button>
+                            @endif
+                            
                                     </td>
                                 </tr>
                                 @empty
@@ -885,30 +887,33 @@
                 <h2 class="fw-bold mb-4">Apa Kata Mereka?</h2>
             </div>
             <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-body p-4">
-                            <div class="d-flex align-items-center mb-3">
-                                <img src="https://ui-avatars.com/api/?name=John+Doe" class="rounded-circle me-3" width="50">
-                                <div>
-                                    <h6 class="mb-1">John Doe</h6>
-                                    <div class="text-warning">
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
-                                        <i class="fas fa-star"></i>
+                @forelse($testimonials as $testimonial)
+                    <div class="col-md-4">
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center mb-3">
+                                    <img src="https://ui-avatars.com/api/?name={{ urlencode($testimonial->customer_name) }}" 
+                                        class="rounded-circle me-3" width="50" alt="{{ $testimonial->customer_name }}">
+                                    <div>
+                                        <h6 class="mb-1">{{ $testimonial->customer_name }}</h6>
+                                        <div class="text-warning">
+                                            @for ($i = 1; $i <= 5; $i++)
+                                                <i class="fas fa-star {{ $i <= $testimonial->rating ? 'text-warning' : 'text-secondary' }}"></i>
+                                            @endfor
+                                        </div>
                                     </div>
                                 </div>
+                                <p class="text-muted mb-0">"{{ $testimonial->review }}"</p>
                             </div>
-                            <p class="text-muted mb-0">"Hasil cucian sangat bersih, seperti baru lagi. Pelayanan ramah dan professional."</p>
                         </div>
                     </div>
-                </div>
-                <!-- Add 2 more testimonial cards -->
+                @empty
+                    <p class="text-center">Belum ada testimoni.</p>
+                @endforelse
             </div>
         </div>
     </section>
+    
 
     <!-- Footer -->
     <footer class="bg-dark py-5">
@@ -1015,6 +1020,7 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <!-- Order Detail Modal -->
 <div class="modal fade" id="detailModal" tabindex="-1">
@@ -1044,27 +1050,17 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
-                {{-- <form action="{{ route('orders.rate') }}" method="POST" id="ratingForm"> --}}
+                <form action="{{ route('orders.rate') }}" method="POST" id="ratingForm">
                     @csrf
-                    <input type="hidden" name="order_id" value="">
-                    
+                    <input type="hidden" name="order_id" id="order_id">
+
                     <!-- Star Rating -->
                     <div class="text-center mb-4">
                         <div class="rating-stars">
-                            <input type="radio" name="rating" value="5" id="star5">
-                            <label for="star5"><i class="fas fa-star"></i></label>
-                            
-                            <input type="radio" name="rating" value="4" id="star4">
-                            <label for="star4"><i class="fas fa-star"></i></label>
-                            
-                            <input type="radio" name="rating" value="3" id="star3">
-                            <label for="star3"><i class="fas fa-star"></i></label>
-                            
-                            <input type="radio" name="rating" value="2" id="star2">
-                            <label for="star2"><i class="fas fa-star"></i></label>
-                            
-                            <input type="radio" name="rating" value="1" id="star1">
-                            <label for="star1"><i class="fas fa-star"></i></label>
+                            @for ($i = 5; $i >= 1; $i--)
+                                <input type="radio" name="rating" value="{{ $i }}" id="star{{ $i }}">
+                                <label for="star{{ $i }}"><i class="fas fa-star"></i></label>
+                            @endfor
                         </div>
                         <small class="text-muted">Klik untuk memberi rating</small>
                     </div>
@@ -1072,18 +1068,16 @@
                     <!-- Review Text -->
                     <div class="mb-3">
                         <label class="form-label">Ulasan Anda</label>
-                        <textarea class="form-control" name="review" rows="3" 
-                            placeholder="Bagikan pengalaman Anda menggunakan layanan kami"></textarea>
+                        <textarea class="form-control" name="review" rows="3" placeholder="Bagikan pengalaman Anda"></textarea>
                     </div>
 
-                    <button type="submit" class="btn btn-primary w-100">
-                        Kirim Rating & Ulasan
-                    </button>
+                    <button type="submit" class="btn btn-primary w-100">Kirim Rating & Ulasan</button>
                 </form>
             </div>
         </div>
     </div>
 </div>
+
 
     {{-- // Add before closing body tag --}}
 <script>
@@ -1096,33 +1090,29 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    document.querySelectorAll('.card, .feature-icon').forEach((el) => observer.observe(el));
+   
+    const ratingModal = document.getElementById('ratingModal');
+    const ratingForm = document.getElementById('ratingForm');
 
-    // ratign form
-
-     // Set order ID when opening rating modal
-     const ratingModal = document.getElementById('ratingModal');
     if (ratingModal) {
-        ratingModal.addEventListener('show.bs.modal', function(event) {
+        ratingModal.addEventListener('show.bs.modal', function (event) {
             const button = event.relatedTarget;
             const orderId = button.getAttribute('data-order-id');
-            this.querySelector('input[name="order_id"]').value = orderId;
+            document.getElementById('order_id').value = orderId;
         });
     }
 
     // Handle rating form submission
-    const ratingForm = document.getElementById('ratingForm');
     if (ratingForm) {
-        ratingForm.addEventListener('submit', function(e) {
+        ratingForm.addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
-            
+
             // Show loading state
             const submitBtn = this.querySelector('button[type="submit"]');
             submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Mengirim...';
             submitBtn.disabled = true;
 
-            // Submit form
             fetch(this.action, {
                 method: 'POST',
                 body: formData,
@@ -1160,6 +1150,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+
 function showLoginAlert() {
     Swal.fire({
         title: 'Login Diperlukan',
@@ -1183,13 +1174,13 @@ document.querySelector('form').addEventListener('submit', function(e) {
 });
 
 // Add price calculator
-function updateTotalPrice() {
-    const service = document.querySelector('select[name="service_type"]');
-    const quantity = document.querySelector('input[type="number"]');
-    const price = service.options[service.selectedIndex].dataset.price;
-    const total = price * quantity.value;
-    document.getElementById('totalPrice').textContent = `Rp ${total.toLocaleString()}`;
-}
+// function updateTotalPrice() {
+//     const service = document.querySelector('select[name="service_type"]');
+//     const quantity = document.querySelector('input[type="number"]');
+//     const price = service.options[service.selectedIndex].dataset.price;
+//     const total = price * quantity.value;
+//     document.getElementById('totalPrice').textContent = `Rp ${total.toLocaleString()}`;
+// }
 
 document.addEventListener('DOMContentLoaded', function() {
     const sections = document.querySelectorAll('section[id]');
@@ -1247,23 +1238,23 @@ document.addEventListener('DOMContentLoaded', function() {
     onScroll(); // Call once on load
 });
 
-document.getElementById('add-service').addEventListener('click', function () {
-        let container = document.getElementById('service-container');
-        let index = container.getElementsByClassName('service-group').length;
-        let newService = document.querySelector('.service-group').cloneNode(true);
+// document.getElementById('add-service').addEventListener('click', function () {
+//         let container = document.getElementById('service-container');
+//         let index = container.getElementsByClassName('service-group').length;
+//         let newService = document.querySelector('.service-group').cloneNode(true);
         
-        newService.querySelector('select').name = `items[${index}][service_detail_id]`;
-        newService.querySelector('input[type=number]').name = `items[${index}][quantity]`;
-        newService.querySelector('input[type=number]').value = 1;
+//         newService.querySelector('select').name = `items[${index}][service_detail_id]`;
+//         newService.querySelector('input[type=number]').name = `items[${index}][quantity]`;
+//         newService.querySelector('input[type=number]').value = 1;
         
-        let removeBtn = newService.querySelector('.remove-service');
-        removeBtn.classList.remove('d-none');
-        removeBtn.addEventListener('click', function () {
-            newService.remove();
-        });
+//         let removeBtn = newService.querySelector('.remove-service');
+//         removeBtn.classList.remove('d-none');
+//         removeBtn.addEventListener('click', function () {
+//             newService.remove();
+//         });
         
-        container.appendChild(newService);
-    });
+//         container.appendChild(newService);
+//     });
 
 
     // Add this to your existing script section
@@ -1415,6 +1406,113 @@ function getStatusOrder(currentStatus, checkStatus) {
     const checkIndex = statusOrder.indexOf(checkStatus);
     return checkIndex <= currentIndex;
 }
+
+// forms
+document.addEventListener("DOMContentLoaded", function () {
+    let serviceIndex = 1; // Mulai dari 1 karena 0 sudah ada di HTML awal
+
+    document.getElementById("add-service").addEventListener("click", function () {
+        let container = document.getElementById("service-container");
+        let newService = document.querySelector(".service-group").cloneNode(true);
+
+        // Ubah semua name attributes agar index-nya bertambah
+        newService.querySelectorAll("select, input").forEach((input) => {
+            if (input.name.includes("items[0]")) {
+                input.name = input.name.replace("items[0]", `items[${serviceIndex}]`);
+            }
+            input.value = ""; // Reset input
+        });
+
+        // Tampilkan tombol remove
+        let removeBtn = newService.querySelector(".remove-service");
+        removeBtn.classList.remove("d-none");
+        removeBtn.addEventListener("click", function () {
+            newService.remove();
+        });
+
+        container.appendChild(newService);
+        serviceIndex++; // Tambah index untuk layanan berikutnya
+    });
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    const serviceContainer = document.getElementById('service-container');
+    const totalPriceElement = document.getElementById('totalPrice');
+
+    function updateTotalPrice() {
+        let total = 0;
+        document.querySelectorAll('.service-group').forEach(group => {
+            const serviceSelect = group.querySelector('select[name^="items"]');
+            const quantityInput = group.querySelector('input[name^="items"][name$="[quantity]"]');
+
+            if (serviceSelect && quantityInput) {
+                const price = parseFloat(serviceSelect.options[serviceSelect.selectedIndex].dataset.price) || 0;
+                const quantity = parseInt(quantityInput.value) || 1;
+                total += price * quantity;
+            }
+        });
+
+        totalPriceElement.textContent = `Rp ${total.toLocaleString('id-ID')}`;
+    }
+
+    // Event Listener saat layanan dipilih atau jumlah berubah
+    serviceContainer.addEventListener('change', function (event) {
+        if (event.target.matches('select[name^="items"], input[name^="items"][name$="[quantity]"]')) {
+            updateTotalPrice();
+        }
+    });
+
+    // Tambah item baru
+    document.getElementById('add-service').addEventListener('click', function () {
+        const serviceGroups = document.querySelectorAll('.service-group');
+        const newIndex = serviceGroups.length;
+
+        const newGroup = document.createElement('div');
+        newGroup.classList.add('service-group', 'mb-4');
+        newGroup.innerHTML = `
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label">Pilih Layanan <span class="text-danger">*</span></label>
+                    <select class="form-select" name="items[${newIndex}][service_detail_id]" required>
+                        <option value="">Pilih layanan...</option>
+                        ${[...document.querySelectorAll('optgroup')].map(group => 
+                            `<optgroup label="${group.label}">
+                                ${[...group.querySelectorAll('option')].map(option => 
+                                    `<option value="${option.value}" data-price="${option.dataset.price}">
+                                        ${option.textContent}
+                                    </option>`).join('')}
+                            </optgroup>`
+                        ).join('')}
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label">Jumlah <span class="text-danger">*</span></label>
+                    <input type="number" class="form-control" name="items[${newIndex}][quantity]" min="1" max="10" value="1" required>
+                </div>
+                <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger remove-service">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+        serviceContainer.appendChild(newGroup);
+        updateTotalPrice();
+    });
+
+    // Hapus item layanan
+    serviceContainer.addEventListener('click', function (event) {
+        if (event.target.closest('.remove-service')) {
+            event.target.closest('.service-group').remove();
+            updateTotalPrice();
+        }
+    });
+
+    // Hitung total saat halaman dimuat
+    updateTotalPrice();
+});
+
+
 </script>
 </body>
 </html>

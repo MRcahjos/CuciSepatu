@@ -56,7 +56,7 @@ class AuthController extends Controller
             if ($user->role === 'customer') {
                 return redirect()->intended('/');
             } else {
-                return redirect()->intended('/admin-dashboard'); // Ganti dengan halaman admin jika perlu
+                return redirect()->intended('/admin/dashboard'); // Ganti dengan halaman admin jika perlu
             }
         }
     

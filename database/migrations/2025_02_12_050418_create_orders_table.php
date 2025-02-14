@@ -22,6 +22,9 @@ return new class extends Migration
             $table->text('pickup_address')->nullable();
             $table->text('notes')->nullable();
             $table->enum('status', ['pending', 'processing', 'completed', 'cancelled'])->default('pending');
+            $table->unsignedTinyInteger('rating')->nullable(); // Rating dari 1-5
+            $table->text('review')->nullable(); // Ulasan teks
+            $table->timestamp('rated_at')->nullable(); // Waktu rating diberikan
             $table->timestamps();
         });
 

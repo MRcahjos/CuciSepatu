@@ -19,7 +19,13 @@ class Order extends Model
         'pickup_address',
         'notes',
         'status',
+        'status', 'rating', 'review', 'rated_at'
     ];
+
+    public function hasRated()
+    {
+        return !is_null($this->rated_at);
+    }
 
     public function items()
     {
